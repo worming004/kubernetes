@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: render
+spec:
+  selector:
+    matchLabels:
+      app: render
+  template:
+    metadata:
+      labels:
+        app: render
+    spec:
+      containers:
+      - name: render
+        image: worming/apprender:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 5124
+        volumeMounts:
+          - mountPath: /assets/html
+            name: html
+            readOnly: true
+        imagePullPolicy: Always
+      - name: writer
+        image: worming/fortune:latest
+        volumeMounts:
+          - mountPath: /assets/html
+            name: html
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        imagePullPolicy: Always
+      volumes:
+      - name: html
+        emptyDir: 
+          medium: Memory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: render
+spec:
+  selector:
+    app: render
+  ports:
+  - port: 5124
+    targetPort: 5124
+  type: LoadBalancer
